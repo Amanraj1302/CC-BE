@@ -14,12 +14,13 @@ export const userValidation = Joi.object({
       "string.min": "Username must be at least 5 characters long",
     }),
 
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
+ 
+     email: Joi.string()
+    .pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
     .required()
     .messages({
-      "string.empty": "Email is required",
-      "string.email": "Please enter a valid email",
+      'string.pattern.base': 'Email must be a valid email address',
+      'any.required': 'Email is required',
     }),
 
   password: Joi.string()
