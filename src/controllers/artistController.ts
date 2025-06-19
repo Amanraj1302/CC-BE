@@ -2,6 +2,8 @@
 import { Request, Response } from "express";
 import { ArtistInfo } from "../models/artistModel";
 import { personalSchema, professionalSchema, uploadPhotosSchema, monologueSchema } from "../validation/artistValidation";
+import path from "path";
+import fs from "fs";
 
 
 export const submitArtistProfile = async (req: Request, res: Response) => {
@@ -17,7 +19,7 @@ export const submitArtistProfile = async (req: Request, res: Response) => {
       instagram, youtube, twitter, linkedin
     } = req.body;
     console.log(req.body);
-
+   
     const artistInfo = new ArtistInfo({
       fullName, email, whatsapp, calling, shortBio, gender, language,
       homeCity, homeState, currentCity, currentState, instagram, youtube, twitter, linkedin
@@ -75,14 +77,15 @@ export const professionalProfile = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// Define the allowed image field names
+type ImageField = "headshot" | "smilingHeadshot" | "fullBody" | "threeQuarter" | "profile";
+
+const uploadRoot = path.join(__dirname, "../../uploads"); 
+
 export const uploadProfile = async (req: Request, res: Response) => {
   try {
-    const { error } = uploadPhotosSchema.validate(req.body);
-    if (error) {
-      const errors = error.details.map((err: any) => err.message);
-      return res.status(400).json({ errors });
-    }
     const { email } = req.body;
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -93,24 +96,60 @@ export const uploadProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Artist not found" });
     }
 
+    const userId = existingArtist._id.toString();
+
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
 
-    if (files.headshot) existingArtist.headshot = files.headshot[0].filename;
-    if (files.smilingHeadshot) existingArtist.smilingHeadshot = files.smilingHeadshot[0].filename;
-    if (files.fullBody) existingArtist.fullBody = files.fullBody[0].filename;
-    if (files.threeQuarter) existingArtist.threeQuarter = files.threeQuarter[0].filename;
-    if (files.profile) existingArtist.profile = files.profile[0].filename;
+    if (!files || Object.keys(files).length === 0) {
+      return res.status(400).json({ message: "No files were uploaded" });
+    }
 
-    await existingArtist.save();
+    const updateFields: Partial<Record<ImageField, string>> = {};
 
-    res.status(200).json({ message: "Profile images uploaded successfully" });
+    const updateField = (fieldName: ImageField) => {
+       const file = files[fieldName]?.[0];
+        if (file) {
+    const oldValue = existingArtist[fieldName as keyof typeof existingArtist];
+
+    if (typeof oldValue === "string") {
+      const oldPath = path.join(uploadRoot, oldValue);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+      updateFields[fieldName] = `${userId}/${file.filename}`;
+    }
+  };
+  
+      
+      const imageFields: ImageField[] = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"];
+      imageFields.forEach(updateField);
+
+    if (Object.keys(updateFields).length > 0) {
+      await ArtistInfo.updateOne(
+        { _id: existingArtist._id },
+        { $set: updateFields }
+      );
+
+      return res.status(200).json({
+        message: "Profile images updated successfully",
+        updatedFields: Object.keys(updateFields)
+      });
+    }
+
+    return res.status(400).json({ message: "No valid files were uploaded" });
   } catch (err) {
     console.error("Error updating profile:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({
+      message: "Server error",
+      error: err instanceof Error ? err.message : "Unknown error"
+    });
   }
 };
+
 export const monolouge = async (req: Request, res: Response) => {
   try {
     const { error } = monologueSchema.validate(req.body);

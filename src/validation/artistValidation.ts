@@ -51,6 +51,10 @@ export const personalSchema = Joi.object({
 });
 
 export const professionalSchema = Joi.object({
+     email: Joi.string().email().required().messages({
+        "string.email": "Invalid email",
+        "string.empty": "Email is required"
+    }),
     talentCategory: Joi.string().required().messages({ "string.empty": "Talent category is required" }),
     height: Joi.string().pattern(/^\d{2,3}\s?(cm|in)?$/).required().messages({
         "string.pattern.base": "Enter valid height like 170 cm",
@@ -84,14 +88,17 @@ export const professionalSchema = Joi.object({
 });
 
 export const uploadPhotosSchema = Joi.object({
-    headshot: Joi.any().required().messages({ "any.required": "Headshot is required" }),
-    smilingHeadshot: Joi.any().required().messages({ "any.required": "Smiling headshot is required" }),
-    fullBody: Joi.any().required().messages({ "any.required": "Full body shot is required" }),
-    threeQuarter: Joi.any().required().messages({ "any.required": "Three-quarter shot is required" }),
-    profile: Joi.any().optional().allow(null)
+    email: Joi.string().email().required().messages({
+        "string.email": "Invalid email",
+        "string.empty": "Email is required"
+    })
 });
 
 export const monologueSchema = Joi.object({
+     email: Joi.string().email().required().messages({
+        "string.email": "Invalid email",
+        "string.empty": "Email is required"
+    }),
     haryanvi: Joi.string().uri().optional().allow(null),
     rajasthani: Joi.string().uri().optional().allow(null),
     bhojpuri: Joi.string().uri().optional().allow(null),

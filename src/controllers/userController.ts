@@ -52,20 +52,19 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
 
 }
 
-function next() {
-  throw new Error("Function not implemented.");
-}
+// function next() {
+//   throw new Error("Function not implemented.");
+// }
 
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   try {
     console.log("Login request received:", req.body);
     const { email, password } = req.body;
     const existingUser = await User.findOne({ email });
+    
     if (!existingUser) {
       return res.status(404).json({ error: "User not found" });
     }
-
-
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid password" });
@@ -73,6 +72,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
     const token = jwt.sign({ userId: existingUser._id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
     
+
     console.log("User token generated--------------:", existingUser);
     await existingUser.save();
 
@@ -85,6 +85,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
     res.status(200).json({ token, message: "User registered successfully" });
 
+   
   }
   catch (error: any) {
     console.error(error); // For debugging
@@ -116,3 +117,27 @@ export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
   return res.status(200).json({ message: 'OTP verified successfully' });
 };
 
+export const getDetails = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+
+    const user = await User.findById(userId); 
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ data: { email: user.email } });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const logoutUser = async(req: Request, res: Response) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+
+  return res.status(200).json({ message: "Logged out successfully" });
+};
