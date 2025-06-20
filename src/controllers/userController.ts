@@ -79,7 +79,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
-    res.status(200).json({name: existingUser.userName, message: "User registered successfully" });
+    res.status(200).json({name: existingUser.userName, artist_id:existingUser.artistId, message: "User registered successfully" });
   }
   catch (error: any) {
     console.error(error); // For debugging
@@ -120,7 +120,7 @@ export const getDetails = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ data: { email: user.email } });
+    res.status(200).json({ data: { email: user.email ,userName:user.userName} });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

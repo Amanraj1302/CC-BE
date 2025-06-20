@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     otp: String,
     otpExpiry: Date,
     isVerified: { type: Boolean, default: false },
+    artistId: { type: mongoose.Schema.Types.ObjectId, ref: "ArtistInfo" },
 
     // Role field
     // role: {
