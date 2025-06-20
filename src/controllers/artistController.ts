@@ -44,8 +44,7 @@ export const professionalProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ errors });
     }
     const {
-      email,
-      talentCategory,
+      email, talentCategory,
       height,
       age,
       screenAge,
@@ -78,9 +77,8 @@ export const professionalProfile = async (req: Request, res: Response) => {
   }
 };
 // Define the allowed image field names
-type ImageField = "headshot" | "smilingHeadshot" | "fullBody" | "threeQuarter" | "profile";
 
-const uploadRoot = path.join(__dirname, "../../uploads"); 
+const uploadRoot = path.join(__dirname, "../../uploads");
 
 export const uploadProfile = async (req: Request, res: Response) => {
   try {
@@ -98,54 +96,43 @@ export const uploadProfile = async (req: Request, res: Response) => {
 
     const userId = existingArtist._id.toString();
 
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
+    // Get uploaded files
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    if (!files || Object.keys(files).length === 0) {
-      return res.status(400).json({ message: "No files were uploaded" });
+// Normalize uploaded file paths
+const updatedPhotos: string[] = [];
+
+["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"].forEach((field) => {
+  const file = files[field]?.[0];
+  if (file) {
+    updatedPhotos.push(`${userId}/${file.filename}`);
+  }
+});
+
+// Optionally remove old ones
+if (existingArtist.photos?.length) {
+  for (const oldPhoto of existingArtist.photos) {
+    const oldPath = path.join(uploadRoot, oldPhoto);
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
     }
+  }
+}
 
-    const updateFields: Partial<Record<ImageField, string>> = {};
+// Save new photo references
+existingArtist.photos = updatedPhotos;
+await existingArtist.save();
 
-    const updateField = (fieldName: ImageField) => {
-       const file = files[fieldName]?.[0];
-        if (file) {
-    const oldValue = existingArtist[fieldName as keyof typeof existingArtist];
 
-    if (typeof oldValue === "string") {
-      const oldPath = path.join(uploadRoot, oldValue);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
-    }
-
-      updateFields[fieldName] = `${userId}/${file.filename}`;
-    }
-  };
-  
-      
-      const imageFields: ImageField[] = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"];
-      imageFields.forEach(updateField);
-
-    if (Object.keys(updateFields).length > 0) {
-      await ArtistInfo.updateOne(
-        { _id: existingArtist._id },
-        { $set: updateFields }
-      );
-
-      return res.status(200).json({
-        message: "Profile images updated successfully",
-        updatedFields: Object.keys(updateFields)
-      });
-    }
-
-    return res.status(400).json({ message: "No valid files were uploaded" });
+    res.status(200).json({
+      message: "Photos uploaded successfully",
+      photos: updatedPhotos,
+    });
   } catch (err) {
-    console.error("Error updating profile:", err);
-    return res.status(500).json({
+    console.error("Error uploading photos:", err);
+    res.status(500).json({
       message: "Server error",
-      error: err instanceof Error ? err.message : "Unknown error"
+      error: err instanceof Error ? err.message : "Unknown error",
     });
   }
 };
@@ -164,13 +151,15 @@ export const monolouge = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Artist not found" });
     }
 
-    existingArtist.haryanvi = haryanvi;
-    existingArtist.rajasthani = rajasthani;
-    existingArtist.bhojpuri = bhojpuri;
-    existingArtist.awadhi = awadhi;
-    existingArtist.maithili = maithili;
-    await existingArtist.save();
-    res.status(200).json({ message: "Profile images uploaded successfully" });
+existingArtist.monologues = [
+  { language: "Haryanvi", url: haryanvi },
+  { language: "Rajasthani", url: rajasthani },
+  { language: "Bhojpuri", url: bhojpuri },
+  { language: "Awadhi", url: awadhi },
+  { language: "Maithili", url: maithili }
+] as any;
+await existingArtist.save();
+res.status(200).json({ message: "Profile images uploaded successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -178,4 +167,38 @@ export const monolouge = async (req: Request, res: Response) => {
 
 };
 
+export const getAllArtistProfiles = async (req: Request, res: Response) => {
+  try {
+    const artists = await ArtistInfo.find().select("fullName currentCity currentState talentCategory headshot");
 
+    const formattedArtists = artists.map(artist => {
+      const artistObj = artist.toObject();
+      return {
+        name: artistObj.fullName,
+        location: `${artistObj.currentCity || "N/A"}, ${artistObj.currentState || "N/A"}`,
+        tags: artistObj.talentCategory ? [artistObj.talentCategory] : [],
+        img: artistObj.photos && artistObj.photos.length > 0 ? `http://localhost:5000/uploads/${artistObj.photos[0]}` : null,
+      };
+    });
+
+    res.status(200).json(formattedArtists);
+  } catch (err) {
+    console.error("Error fetching artist profiles:", err);
+    res.status(500).json({ message: "Failed to fetch artist profiles" });
+  }
+};
+
+
+export const getArtistByEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    const artist = await ArtistInfo.findOne({ email });
+
+    if (!artist) return res.status(404).json({ message: "Artist not found" });
+
+    res.status(200).json(artist);
+  } catch (err) {
+    console.error("Failed to fetch artist:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

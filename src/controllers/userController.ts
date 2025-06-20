@@ -29,7 +29,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     if (existingUser) {
       return res.status(400).json({ error: "User already exists with this email" });
     }
-     //  Generate OTP
+    //  Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     //  Set expiration to 5 minutes from now
@@ -39,7 +39,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const user = new User({ userName, email, password: hashedPassword,otp, otpExpiry, isVerified: false });
+    const user = new User({ userName, email, password: hashedPassword, otp, otpExpiry, isVerified: false });
     console.log("User token generated--------------:", user);
     await user.save();
     await sendOtpEmail(email, otp);
@@ -61,7 +61,6 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     console.log("Login request received:", req.body);
     const { email, password } = req.body;
     const existingUser = await User.findOne({ email });
-    
     if (!existingUser) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -69,10 +68,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid password" });
     }
-
     const token = jwt.sign({ userId: existingUser._id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-    
-
     console.log("User token generated--------------:", existingUser);
     await existingUser.save();
 
@@ -83,9 +79,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
-    res.status(200).json({ token, message: "User registered successfully" });
-
-   
+    res.status(200).json({name: existingUser.userName, message: "User registered successfully" });
   }
   catch (error: any) {
     console.error(error); // For debugging
@@ -96,7 +90,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 // Otp verification function
 export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
   const { email, otp } = req.body;
- 
+
 
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -121,7 +115,7 @@ export const getDetails = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
 
-    const user = await User.findById(userId); 
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -132,7 +126,7 @@ export const getDetails = async (req: Request, res: Response) => {
   }
 };
 
-export const logoutUser = async(req: Request, res: Response) => {
+export const logoutUser = async (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

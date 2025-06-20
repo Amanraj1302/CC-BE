@@ -29,16 +29,10 @@ const ArtistInfoSchema = new mongoose.Schema({
       workLink: String,
     }
   ],
-  headshot: String,           
-  smilingHeadshot: String,
-  fullBody: String,
-  threeQuarter: String,
-  profile: String,
-  haryanvi: String,
-  rajasthani: String ,
-  bhojpuri: String,
-  awadhi:String ,
-  maithili:String,
+  photos: [String],
+  monologues: [
+  { language: String, url: String }
+]
 }, { timestamps: true });
 
 export const ArtistInfo = mongoose.model("ArtistInfo", ArtistInfoSchema);

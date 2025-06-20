@@ -3,8 +3,7 @@ import { ArtistInfo } from "../models/artistModel";
 
 export const attachUserId = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const email = req.query.email as string;
-
+     const email = req.query?.email as string;
     if (!email) {
       return res.status(400).json({ message: "Email is required in query params" });
     }
