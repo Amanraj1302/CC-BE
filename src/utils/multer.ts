@@ -12,12 +12,13 @@ if (!fs.existsSync(uploadRoot)) {
 export const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
-      const userId = (req as any).userId; 
-      if (!userId) {
-        return cb(new Error("User ID is required"), "");
+      const artistId = (req as any).artistId; 
+      
+      if (!artistId) {
+        return cb(new Error("Artist ID is required"), "");
       }
 
-      const userFolder = path.join(uploadRoot, userId);
+      const userFolder = path.join(uploadRoot, artistId);
 
       // check if user-specific folder exists (don't delete old images)
       if (!fs.existsSync(userFolder)) {

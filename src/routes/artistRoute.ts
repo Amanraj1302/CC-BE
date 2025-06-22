@@ -1,6 +1,6 @@
 import { Router, RequestHandler } from "express";
 import { upload } from "../utils/multer";
-import { submitArtistProfile, professionalProfile, uploadProfile, monolouge, getAllArtistProfiles, getArtistByEmail, editsubmitArtistProfile } from "../controllers/artistController";
+import { submitArtistProfile, professionalProfile, uploadProfile, monolouge, getAllArtistProfiles, getArtistByEmail, editsubmitArtistProfile, artistDp } from "../controllers/artistController";
 import { attachUserId } from "../middleware/attachUserId";
 import { checkRole } from "../middleware/checkRole";
 import { authentication } from "../middleware/authentication";
@@ -10,9 +10,15 @@ const router = Router();
 
 router.post("/profile", authentication as RequestHandler, checkRole("artist") as RequestHandler, submitArtistProfile as RequestHandler);
 router.put("/profile", authentication as RequestHandler, checkRole("artist") as RequestHandler, editsubmitArtistProfile as RequestHandler);
-router.put("/professional", checkRole("artist") as RequestHandler, professionalProfile as RequestHandler);
+router.post("/artistDp", authentication as RequestHandler, checkRole("artist") as RequestHandler, attachUserId as RequestHandler,
+  upload.fields([
+    { name: "artistDp", maxCount: 1  }
+  ]),
+  artistDp as RequestHandler);
+router.put("/professional", authentication as RequestHandler, checkRole("artist") as RequestHandler, professionalProfile as RequestHandler);
 router.put(
   "/upload",
+  authentication as RequestHandler,
   checkRole("artist") as RequestHandler,
   attachUserId as RequestHandler,
   upload.fields([
