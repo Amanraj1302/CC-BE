@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import {userRoutes} from "./routes/userRoutes";
 import cookieParser from "cookie-parser";
 import { artistRoutes } from "./routes/artistRoute";
+import { ProjectFormRoutes } from "./routes/projectFormRoute";  
 import path from "path";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors({
 app.use("/api/users", userRoutes);
 app.use("/api/artist", artistRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/api/project",ProjectFormRoutes)
 
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {

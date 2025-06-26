@@ -50,3 +50,36 @@ export const upload = multer({
     }
   },
 });
+
+/* ----------------------------- Banner Storage ----------------------------- */
+const bannerFolder = path.join(uploadRoot, "banner");
+
+// Ensure banner folder exists
+if (!fs.existsSync(bannerFolder)) {
+  fs.mkdirSync(bannerFolder, { recursive: true });
+}
+
+const bannerStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, bannerFolder);
+  },
+
+  filename: (_req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+export const uploadBanner = multer({
+  storage: bannerStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file type"));
+    }
+  },
+});
+

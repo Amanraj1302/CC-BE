@@ -188,7 +188,7 @@ export const getAllArtistProfiles = async (req: Request, res: Response) => {
 
     const formattedArtists = artists.map(artist => {
       const artistObj = artist.toObject();
-      const profileImg = artist?.photos?.find((photo)=>(photo.includes("/artistDp"))); 
+      const profileImg = artist?.photos?.find((photo) => (photo.includes("/artistDp")));
       console.log(artistObj);
       return {
         name: artistObj.fullName,
@@ -301,3 +301,76 @@ export const artistDp = async (req: Request, res: Response) => {
 
   }
 }
+
+
+export const getProfile = async (req: Request, res: Response) => {
+  const { email } = req.query as { email: string };
+  console.log(email);
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  const existingArtist = await ArtistInfo.findOne({ email });
+
+  if (!existingArtist) {
+    return res.status(404).json({ message: "Artist not found" });
+  }
+  
+  try {
+    const profile = await ArtistInfo.findOne({ email }).select(
+      "fullName email whatsapp calling shortBio gender language homeCity homeState currentCity currentState instagram youtube twitter linkedin"
+    );
+
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    return res.status(200).json(profile);
+  } catch (error) {
+    
+    return res.status(500).json({ message: "Server Error", error });
+  }
+}; 
+export const getProfessionalProfile = async (req: Request, res: Response) => {
+  const { email } = req.query as { email: string };
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const profile = await ArtistInfo.findOne({ email }).select(
+      "talentCategory height age screenAge videoReel skills pastProjects"
+    );
+
+    if (!profile) {
+      return res.status(404).json({ message: "Professional profile not found" });
+    }
+
+    return res.status(200).json(profile);
+  } catch (error) {
+    console.error("Error fetching professional profile:", error);
+    return res.status(500).json({ message: "Server Error", error });
+  }
+};
+ export const getUploadPhotos = async (req: Request, res: Response) => {
+  const { email } = req.query as { email: string };
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const artist = await ArtistInfo.findOne({ email }).select("photos");
+
+    if (!artist) {
+      return res.status(404).json({ message: "Artist not found" });
+    }
+
+    return res.status(200).json({ photos: artist.photos || {} });
+  } catch (error) {
+    console.error("Error fetching uploaded photos:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
