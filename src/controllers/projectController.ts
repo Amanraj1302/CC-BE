@@ -1,6 +1,6 @@
 import { Project } from "../models/projectFormModel";
+import { Request, Response } from "express";
 
-// Create Project Controller
 export const createProject = async (req: any, res: any) => {
  
   try {
@@ -67,5 +67,41 @@ export const createProject = async (req: any, res: any) => {
   } catch (error) {
     console.error("Error creating project:", error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const getAllProjects = async (req: Request, res: Response) => {
+  try {
+    const projects = await Project.find()
+      .sort({ createdAt: -1 })
+      .select(
+        "projectName typeOfProject description castingCity castingState " +
+        "castingCountry shootingCity shootingState shootingCountry role gender ageRange language banner"
+      );
+
+    const formattedProjects = projects.map((project) => {
+      const projectObj = project.toObject();
+
+      return {
+        _id: projectObj._id,
+        projectName: projectObj.projectName,
+        typeOfProject: projectObj.typeOfProject,
+        description: projectObj.description,
+        castingLocation: `${projectObj.castingCity}, ${projectObj.castingState}, ${projectObj.castingCountry}`,
+        shootingLocation: `${projectObj.shootingCity}, ${projectObj.shootingState}, ${projectObj.shootingCountry}`,
+        role: projectObj.role,
+        gender: projectObj.gender,
+        ageRange: projectObj.ageRange,
+        language: projectObj.language,
+        banner: projectObj.banner
+          ? `http://localhost:5000${projectObj.banner}`
+          : null,
+      };
+    });
+
+    res.status(200).json({ projects: formattedProjects }); // ✅ wrap in `{ projects: … }`
+  } catch (err) {
+    console.error("Error fetching projects:", err);
+    res.status(500).json({ message: "Failed to fetch projects" });
   }
 };

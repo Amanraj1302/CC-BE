@@ -147,12 +147,12 @@ export const uploadProfile = async (req: Request, res: Response) => {
 
 export const monolouge = async (req: Request, res: Response) => {
   try {
-    const { error } = monologueSchema.validate(req.body);
-    if (error) {
-      const errors = error.details.map((err: any) => err.message);
-      return res.status(400).json({ errors });
+    const { email, monologues } = req.body;
+
+    if (!email || !monologues) {
+      return res.status(400).json({ message: "Email and monologues are required" });
     }
-    const { email, haryanvi, rajasthani, bhojpuri, awadhi, maithili } = req.body;
+
     const existingArtist = await ArtistInfo.findOne({ email });
     const existingUser = await User.findOne({ email });
 
@@ -160,13 +160,7 @@ export const monolouge = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Artist not found" });
     }
 
-    existingArtist.monologues = [
-      { language: "Haryanvi", url: haryanvi },
-      { language: "Rajasthani", url: rajasthani },
-      { language: "Bhojpuri", url: bhojpuri },
-      { language: "Awadhi", url: awadhi },
-      { language: "Maithili", url: maithili }
-    ] as any;
+    existingArtist.monologues = monologues;
     await existingArtist.save();
 
     if (existingUser) {
@@ -174,13 +168,13 @@ export const monolouge = async (req: Request, res: Response) => {
       await existingUser.save();
     }
 
-    res.status(200).json({ message: "Profile images uploaded successfully" });
+    res.status(200).json({ message: "Monologues saved successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
-
 };
+
 
 export const getAllArtistProfiles = async (req: Request, res: Response) => {
   try {
@@ -371,6 +365,31 @@ export const getProfessionalProfile = async (req: Request, res: Response) => {
     return res.status(200).json({ photos: artist.photos || {} });
   } catch (error) {
     console.error("Error fetching uploaded photos:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
+export const getMonologueData = async (req: Request, res: Response) => {
+  const { email } = req.query as { email?: string };
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const artist = await ArtistInfo.findOne({ email }).select(
+      "monologues"
+    );
+
+    if (!artist) {
+      return res.status(404).json({ message: "Artist not found" });
+    }
+
+    return res.status(200).json(artist);
+  } catch (error) {
+    console.error("Error fetching monologue data:", error);
     return res.status(500).json({ message: "Server error", error });
   }
 };
