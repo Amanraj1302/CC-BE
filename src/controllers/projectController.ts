@@ -2,7 +2,7 @@ import { Project } from "../models/projectFormModel";
 import { Request, Response } from "express";
 
 export const createProject = async (req: any, res: any) => {
- 
+
   try {
     const {
       projectName,
@@ -75,8 +75,8 @@ export const getAllProjects = async (req: Request, res: Response) => {
     const projects = await Project.find()
       .sort({ createdAt: -1 })
       .select(
-        "projectName typeOfProject description castingCity castingState " +
-        "castingCountry shootingCity shootingState shootingCountry role gender ageRange language banner"
+        "projectName typeOfProject description castingCity castingState castingStart castingEnd " +
+        "castingCountry shootingStart shootingEnd  shootingState shootingCountry role gender ageRange language banner"
       );
 
     const formattedProjects = projects.map((project) => {
@@ -87,8 +87,12 @@ export const getAllProjects = async (req: Request, res: Response) => {
         projectName: projectObj.projectName,
         typeOfProject: projectObj.typeOfProject,
         description: projectObj.description,
-        castingLocation: `${projectObj.castingCity}, ${projectObj.castingState}, ${projectObj.castingCountry}`,
-        shootingLocation: `${projectObj.shootingCity}, ${projectObj.shootingState}, ${projectObj.shootingCountry}`,
+        castingLocation: ` ${projectObj.castingState}, ${projectObj.castingCountry}`,
+        castingStart: `${projectObj.castingStart}`,
+        castingEnd: `${projectObj.castingEnd}`,
+        shootingStart: `${projectObj.shootingStart}`,
+        shootingEnd: ` ${projectObj.shootingEnd}`,
+        shootingLocation: ` ${projectObj.shootingState}, ${projectObj.shootingCountry}`,
         role: projectObj.role,
         gender: projectObj.gender,
         ageRange: projectObj.ageRange,

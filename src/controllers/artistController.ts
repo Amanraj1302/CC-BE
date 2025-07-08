@@ -107,30 +107,35 @@ export const uploadProfile = async (req: Request, res: Response) => {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     console.log("🚀 ~ uploadProfile ~ files:", files)
 
-    // Normalize uploaded file paths
     const updatedPhotos: string[] = [];
 
-    ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"].forEach((field) => {
+    const fields = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"];
+
+    fields.forEach((field, index) => {
       const file = files[field]?.[0];
       if (file) {
         updatedPhotos.push(`${userId}/${file.filename}`);
+      } else if (existingArtist.photos?.[index]) {
+        // Preserve existing photo if no new one uploaded
+        updatedPhotos.push(existingArtist.photos[index]);
       }
     });
 
-    // Optionally remove old ones
+    // Delete only replaced files
     if (existingArtist.photos?.length) {
-      for (const oldPhoto of existingArtist.photos) {
-        const oldPath = path.join(uploadRoot, oldPhoto);
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
+      existingArtist.photos.forEach((oldPhoto, idx) => {
+        const wasReplaced = updatedPhotos[idx] !== oldPhoto;
+        if (wasReplaced) {
+          const oldPath = path.join(uploadRoot, oldPhoto);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
         }
-      }
+      });
     }
 
-    // Save new photo references
     existingArtist.photos = updatedPhotos;
     await existingArtist.save();
-
 
     res.status(200).json({
       message: "Photos uploaded successfully",
@@ -265,7 +270,6 @@ export const editsubmitArtistProfile = async (req: Request, res: Response) => {
 export const artistDp = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    console.log(email);
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
@@ -279,22 +283,42 @@ export const artistDp = async (req: Request, res: Response) => {
 
     const userId = existingArtist._id.toString();
 
+    const uploadRoot = path.join(__dirname, "../../uploads");
+
     // Get uploaded files
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("🚀 ~ uploadProfile ~ files:", files)
+    console.log("🚀 ~ artistDp ~ files:", files);
 
-    existingArtist.photos.push(`${userId}/${files.artistDp[0].filename}`);
+    // Check if new DP is uploaded
+    const dpFile = files?.artistDp?.[0];
+
+    if (dpFile) {
+      const newDpPath = `${userId}/${dpFile.filename}`;
+
+      // Delete old DP if exists
+      if (existingArtist.photos?.[0]) {
+        const oldDpPath = path.join(uploadRoot, existingArtist.photos[0]);
+        if (fs.existsSync(oldDpPath)) {
+          fs.unlinkSync(oldDpPath);
+        }
+      }
+
+      // Replace DP (first slot)
+      existingArtist.photos[0] = newDpPath;
+    }
+
     await existingArtist.save();
 
-
-    res.status(201).json({ message: "Artist profile created successfully" });
+    res.status(200).json({
+      message: dpFile ? "Artist DP updated successfully" : "No new DP uploaded, keeping existing",
+      dp: existingArtist.photos[0],
+    });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
-
   }
-}
+};
 
 
 export const getProfile = async (req: Request, res: Response) => {
@@ -310,7 +334,7 @@ export const getProfile = async (req: Request, res: Response) => {
   if (!existingArtist) {
     return res.status(404).json({ message: "Artist not found" });
   }
-  
+
   try {
     const profile = await ArtistInfo.findOne({ email }).select(
       "fullName email whatsapp calling shortBio gender language homeCity homeState currentCity currentState instagram youtube twitter linkedin"
@@ -322,10 +346,10 @@ export const getProfile = async (req: Request, res: Response) => {
 
     return res.status(200).json(profile);
   } catch (error) {
-    
+
     return res.status(500).json({ message: "Server Error", error });
   }
-}; 
+};
 export const getProfessionalProfile = async (req: Request, res: Response) => {
   const { email } = req.query as { email: string };
 
@@ -348,7 +372,7 @@ export const getProfessionalProfile = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server Error", error });
   }
 };
- export const getUploadPhotos = async (req: Request, res: Response) => {
+export const getUploadPhotos = async (req: Request, res: Response) => {
   const { email } = req.query as { email: string };
 
   if (!email) {
