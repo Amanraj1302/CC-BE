@@ -417,3 +417,38 @@ export const getMonologueData = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+export const getArtistDp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.query;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const existingArtist = await ArtistInfo.findOne({ email });
+
+    if (!existingArtist) {
+      return res.status(404).json({ message: "Artist not found" });
+    }
+
+    const dpPath = existingArtist.photos?.[0];
+
+    if (!dpPath) {
+      return res.status(404).json({ message: "No DP found for this artist" });
+    }
+
+    const absolutePath = path.join(__dirname, "../../uploads", dpPath);
+
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ message: "DP file not found on server" });
+    }
+
+    res.status(200).json({
+      message: "Artist DP fetched successfully",
+      dp: dpPath,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

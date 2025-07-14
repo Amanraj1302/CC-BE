@@ -74,10 +74,8 @@ export const projectSchema = new mongoose.Schema(
       required: true,
     },
 
-    banner: {
-      type: String, // This will store the URL or path of the uploaded banner (PDF/JPEG/PNG)
-      required: true,
-    },
+    bannerPdf: String,
+    bannerImage: String,
   },
   { timestamps: true }
 );

@@ -4,7 +4,8 @@ import {
   submitArtistProfile, professionalProfile, uploadProfile,
   monolouge, getAllArtistProfiles, getArtistByEmail, editsubmitArtistProfile,
   artistDp, getProfile, getProfessionalProfile, getUploadPhotos
-  , getMonologueData
+  , getMonologueData,
+  getArtistDp
 } from "../controllers/artistController";
 import { attachUserId } from "../middleware/attachUserId";
 import { checkRole } from "../middleware/checkRole";
@@ -42,6 +43,7 @@ router.get('/profile', authentication as RequestHandler, getProfile as unknown a
 router.get("/professional", authentication as RequestHandler, getProfessionalProfile as unknown as RequestHandler);
 router.get("/upload", authentication as RequestHandler, attachUserId as RequestHandler, getUploadPhotos as unknown as RequestHandler);
 router.get("/monologue", authentication as RequestHandler, attachUserId as RequestHandler, getMonologueData as unknown as RequestHandler);
+router.get("/artistDp", authentication as RequestHandler, attachUserId as RequestHandler, getArtistDp as RequestHandler);
 router.get("/:_id", getArtistByEmail as RequestHandler);
 
 
