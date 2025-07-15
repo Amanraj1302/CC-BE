@@ -1,6 +1,7 @@
 import Joi from "joi";
 
 export const personalSchema = Joi.object({
+    _id: Joi.string().optional(), // Optional for updates
     fullName: Joi.string().min(2).max(50).required().messages({
         "string.empty": "Full name is required",
         "string.min": "Too short",
@@ -51,7 +52,8 @@ export const personalSchema = Joi.object({
 });
 
 export const professionalSchema = Joi.object({
-     email: Joi.string().email().required().messages({
+    _id: Joi.string().optional(), // Optional for updates 
+    email: Joi.string().email().required().messages({
         "string.email": "Invalid email",
         "string.empty": "Email is required"
     }),
@@ -77,6 +79,7 @@ export const professionalSchema = Joi.object({
     }),
     pastProjects: Joi.array().items(
         Joi.object({
+            _id: Joi.string().optional(), // Optional for updates
             projectName: Joi.string().required().messages({ "string.empty": "Project name is required" }),
             role: Joi.string().required().messages({ "string.empty": "Role is required" }),
             workLink: Joi.string().uri().required().messages({
@@ -88,6 +91,7 @@ export const professionalSchema = Joi.object({
 });
 
 export const uploadPhotosSchema = Joi.object({
+   _id: Joi.string().optional(), // Optional for updates
     email: Joi.string().email().required().messages({
         "string.email": "Invalid email",
         "string.empty": "Email is required"
@@ -95,7 +99,8 @@ export const uploadPhotosSchema = Joi.object({
 });
 
 export const monologueSchema = Joi.object({
-     email: Joi.string().email().required().messages({
+    _id: Joi.string().optional(), // Optional for updates
+    email: Joi.string().email().required().messages({
         "string.email": "Invalid email",
         "string.empty": "Email is required"
     }),

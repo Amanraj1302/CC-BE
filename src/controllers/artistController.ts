@@ -15,32 +15,58 @@ export const submitArtistProfile = async (req: Request, res: Response) => {
       const errors = error.details.map((err: any) => err.message);
       return res.status(400).json({ errors });
     }
+
     const userId = (req as any).userId;
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     const {
       fullName, email, whatsapp, calling, shortBio, gender, language,
       homeCity, homeState, currentCity, currentState,
       instagram, youtube, twitter, linkedin
     } = req.body;
-    console.log(req.body);
 
-    const artistInfo = new ArtistInfo({
-      fullName, email, whatsapp, calling, shortBio, gender, language,
-      homeCity, homeState, currentCity, currentState, instagram, youtube, twitter, linkedin
-    });
-    await artistInfo.save();
-    console.log(artistInfo);
+    let artistInfo = await ArtistInfo.findOne({ email }); // use email or userId if your ArtistInfo links to User
 
+    if (artistInfo) {
+      // Update existing
+      artistInfo.fullName = fullName;
+      artistInfo.whatsapp = whatsapp;
+      artistInfo.calling = calling;
+      artistInfo.shortBio = shortBio;
+      artistInfo.gender = gender;
+      artistInfo.language = language;
+      artistInfo.homeCity = homeCity;
+      artistInfo.homeState = homeState;
+      artistInfo.currentCity = currentCity;
+      artistInfo.currentState = currentState;
+      artistInfo.instagram = instagram;
+      artistInfo.youtube = youtube;
+      artistInfo.twitter = twitter;
+      artistInfo.linkedin = linkedin;
 
-    res.status(201).json({ message: "Artist profile created successfully" });
+      await artistInfo.save();
+
+      return res.status(200).json({ message: "Artist profile updated successfully" });
+    } else {
+      // Create new
+      artistInfo = new ArtistInfo({
+        fullName, email, whatsapp, calling, shortBio, gender, language,
+        homeCity, homeState, currentCity, currentState,
+        instagram, youtube, twitter, linkedin
+      });
+      await artistInfo.save();
+
+      return res.status(201).json({ message: "Artist profile created successfully" });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 export const professionalProfile = async (req: Request, res: Response) => {

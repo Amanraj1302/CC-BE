@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const ArtistInfoSchema = new mongoose.Schema({
+ 
   fullName: String,
   email: String,
   whatsapp: String,
