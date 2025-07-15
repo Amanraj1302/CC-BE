@@ -16,12 +16,6 @@ export const submitArtistProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ errors });
     }
 
-    const userId = (req as any).userId;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
     const {
       fullName, email, whatsapp, calling, shortBio, gender, language,
       homeCity, homeState, currentCity, currentState,
@@ -121,7 +115,7 @@ export const uploadProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const existingArtist = await ArtistInfo.findOne({ email });
+    const existingArtist = await ArtistInfo.findOne({ email }) as any;
 
     if (!existingArtist) {
       return res.status(404).json({ message: "Artist not found" });
@@ -131,25 +125,25 @@ export const uploadProfile = async (req: Request, res: Response) => {
 
     // Get uploaded files
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("🚀 ~ uploadProfile ~ files:", files)
 
-    const updatedPhotos: string[] = [];
+    const updatedPhotos ={} as any;
 
-    const fields = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile"];
+    const fields = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile", "artistDp"];
 
     fields.forEach((field, index) => {
       const file = files[field]?.[0];
       if (file) {
-        updatedPhotos.push(`${userId}/${file.filename}`);
-      } else if (existingArtist.photos?.[index]) {
+        updatedPhotos[field] = `${userId}/${file.filename}`;
+      } else if (existingArtist?.photos?.[field]) {
         // Preserve existing photo if no new one uploaded
-        updatedPhotos.push(existingArtist.photos[index]);
+        updatedPhotos[field] = existingArtist.photos[field];
       }
     });
 
     // Delete only replaced files
     if (existingArtist.photos?.length) {
-      existingArtist.photos.forEach((oldPhoto, idx) => {
+      Object.keys(existingArtist.photos).forEach((key, idx) => {
+        const oldPhoto = existingArtist.photos[key];
         const wasReplaced = updatedPhotos[idx] !== oldPhoto;
         if (wasReplaced) {
           const oldPath = path.join(uploadRoot, oldPhoto);
@@ -213,14 +207,14 @@ export const getAllArtistProfiles = async (req: Request, res: Response) => {
 
     const formattedArtists = artists.map(artist => {
       const artistObj = artist.toObject();
-      const profileImg = artist?.photos?.find((photo) => (photo.includes("/artistDp")));
+      const profileImg = artist?.photos?.artistDp;
       console.log(artistObj);
       return {
         name: artistObj.fullName,
         _id: artistObj._id,
         location: `${artistObj.currentCity || "N/A"}, ${artistObj.currentState || "N/A"}`,
         tags: artistObj.talentCategory ? [artistObj.talentCategory] : [],
-        img: artistObj.photos && artistObj.photos.length > 0 ? `http://localhost:5000/uploads/${profileImg}` : null,
+        img: profileImg ? `http://localhost:5000/uploads/${profileImg}` : null,
       };
     });
 
@@ -301,10 +295,13 @@ export const artistDp = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const existingArtist = await ArtistInfo.findOne({ email });
+    let existingArtist = await ArtistInfo.findOne({ email }) as any;
 
     if (!existingArtist) {
-      return res.status(404).json({ message: "Artist not found" });
+      const artist = new ArtistInfo({
+        email,
+      });
+      existingArtist = await artist.save();
     }
 
     const userId = existingArtist._id.toString();
@@ -313,7 +310,6 @@ export const artistDp = async (req: Request, res: Response) => {
 
     // Get uploaded files
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("🚀 ~ artistDp ~ files:", files);
 
     // Check if new DP is uploaded
     const dpFile = files?.artistDp?.[0];
@@ -322,22 +318,22 @@ export const artistDp = async (req: Request, res: Response) => {
       const newDpPath = `${userId}/${dpFile.filename}`;
 
       // Delete old DP if exists
-      if (existingArtist.photos?.[0]) {
-        const oldDpPath = path.join(uploadRoot, existingArtist.photos[0]);
+      if (existingArtist.photos?.artistDp) {
+        const oldDpPath = path.join(uploadRoot, existingArtist.photos.artistDp);
         if (fs.existsSync(oldDpPath)) {
           fs.unlinkSync(oldDpPath);
         }
       }
 
       // Replace DP (first slot)
-      existingArtist.photos[0] = newDpPath;
+      existingArtist.photos.artistDp = newDpPath;
     }
 
     await existingArtist.save();
 
     res.status(200).json({
       message: dpFile ? "Artist DP updated successfully" : "No new DP uploaded, keeping existing",
-      dp: existingArtist.photos[0],
+      dp: existingArtist.photos.artistDp || null,
     });
 
   } catch (err) {
@@ -452,12 +448,11 @@ export const getArtistDp = async (req: Request, res: Response) => {
     }
 
     const existingArtist = await ArtistInfo.findOne({ email });
-
     if (!existingArtist) {
       return res.status(404).json({ message: "Artist not found" });
     }
 
-    const dpPath = existingArtist.photos?.[0];
+    const dpPath = existingArtist?.photos?.artistDp;
 
     if (!dpPath) {
       return res.status(404).json({ message: "No DP found for this artist" });

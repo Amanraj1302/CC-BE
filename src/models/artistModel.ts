@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const ArtistInfoSchema = new mongoose.Schema({
- 
+
   fullName: String,
   email: String,
   whatsapp: String,
@@ -30,10 +30,17 @@ const ArtistInfoSchema = new mongoose.Schema({
       workLink: String,
     }
   ],
-  photos: [String],
+  photos: {
+    headshot: String,
+    smilingHeadshot: String,
+    fullBody: String,
+    threeQuarter: String,
+    profile: String,
+    artistDp: String
+  },
   monologues: [
-  { language: String, url: String }
-]
+    { language: String, url: String }
+  ]
 }, { timestamps: true });
 
 export const ArtistInfo = mongoose.model("ArtistInfo", ArtistInfoSchema);

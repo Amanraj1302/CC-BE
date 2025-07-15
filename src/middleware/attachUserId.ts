@@ -10,9 +10,9 @@ export const attachUserId = async (req: Request, res: Response, next: NextFuncti
       return res.status(400).json({ message: "Email is required in query params" });
     }
 
-    const artist = await ArtistInfo.findOne({ email });
+    let artist = await ArtistInfo.findOne({ email });
     if (!artist) {
-      return res.status(404).json({ message: "Artist not found" });
+     artist =  await ArtistInfo.create({ email });
     }
 
     (req as any).artistId = artist._id.toString();
