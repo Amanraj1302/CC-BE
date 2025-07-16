@@ -40,7 +40,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const user = new User({ userName, email, role, password: hashedPassword, otp, otpExpiry, isVerified: false });
-    console.log("User token generated--------------:", user);
+    
     await user.save();
     await sendOtpEmail(email, otp);
 
@@ -69,7 +69,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       return res.status(401).json({ error: "Invalid password" });
     }
     const token = jwt.sign({ userId: existingUser._id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-    console.log("User token generated--------------:", existingUser);
+    
     await existingUser.save();
 
     res.cookie("token", token, {

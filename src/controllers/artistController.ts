@@ -208,7 +208,7 @@ export const getAllArtistProfiles = async (req: Request, res: Response) => {
     const formattedArtists = artists.map(artist => {
       const artistObj = artist.toObject();
       const profileImg = artist?.photos?.artistDp;
-      console.log(artistObj);
+      
       return {
         name: artistObj.fullName,
         _id: artistObj._id,
@@ -256,7 +256,7 @@ export const editsubmitArtistProfile = async (req: Request, res: Response) => {
       homeCity, homeState, currentCity, currentState,
       instagram, youtube, twitter, linkedin
     } = req.body;
-    console.log(req.body);
+    
 
     const existingArtist = await ArtistInfo.findOne({ email });
     if (!existingArtist) {

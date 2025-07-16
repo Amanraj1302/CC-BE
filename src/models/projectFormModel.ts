@@ -76,8 +76,17 @@ export const projectSchema = new mongoose.Schema(
 
     bannerPdf: String,
     bannerImage: String,
+    
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
   },
+
   { timestamps: true }
+
 );
 
 export const Project = mongoose.model("Project", projectSchema);

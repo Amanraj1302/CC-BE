@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { projectValidationSchema } from "../validation/projectValidation"; // Joi schema
 import path from "path";
 import fs from "fs";
+import { User } from "../models/userModel";
 
 export const createProject = async (req: Request, res: Response) => {
   try {
@@ -111,6 +112,7 @@ export const createProject = async (req: Request, res: Response) => {
       language,
       bannerPdf: `/uploads/banner/${bannerPdfFile.filename}`, // Save PDF path
       bannerImage: `/uploads/banner/${bannerImageFile.filename}`, // Save Image path
+      userId: (req as any).userId,
     });
 
     const savedProject = await newProject.save();
@@ -197,12 +199,23 @@ export const updateProject = async (req: Request, res: Response) => {
 
 export const getAllProjects = async (req: Request, res: Response) => {
   try {
-    const projects = await Project.find()
-      .sort({ createdAt: -1 })
+    const userId = (req as any).userId;
+
+    const user = await User.findById(userId) as any;
+
+    const role = user.role;
+
+    const filter = {} as any;
+    if (role === "director") {
+      filter.userId = userId;
+    }
+
+    const projects = await Project.find(filter).sort({ createdAt: -1 })
       .select(
         "projectName typeOfProject description castingCity castingState castingStart castingEnd " +
         "castingCountry shootingStart shootingEnd shootingState shootingCountry role gender ageRange language bannerPdf bannerImage"
       );
+
 
     const formattedProjects = projects.map((project) => {
       const projectObj = project.toObject();
