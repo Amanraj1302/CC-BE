@@ -10,12 +10,12 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     artistId: { type: mongoose.Schema.Types.ObjectId, ref: "ArtistInfo" },
 
-    // Role field
-    // role: {
-    //   type: String,
-    //   enum: ["artist", "director"],
-    //   required: true,
-    // },
+    
+    role: {
+      type: String,
+      enum: ["artist", "director"],
+      required: true,
+    },
 
     // // artist profile Schema :
     // artistProfile: {

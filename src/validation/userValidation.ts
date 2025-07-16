@@ -38,5 +38,12 @@ export const userValidation = Joi.object({
       "any.only": "Passwords must match",
       "string.empty": "Confirm Password is required",
     }),
+  role: Joi.string()
+    .valid("artist", "director")
+    .required()
+    .messages({
+      "any.only": "Role must be either 'artist' or 'director'",
+      "string.empty": "Role is required",
+    })
 });
 

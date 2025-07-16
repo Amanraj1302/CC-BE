@@ -23,7 +23,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
       const errors = error.details.map((err: any) => err.message);
       return res.status(400).json({ errors });
     }
-    const { userName, email, password } = req.body;
+    const { userName, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -39,7 +39,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const user = new User({ userName, email, password: hashedPassword, otp, otpExpiry, isVerified: false });
+    const user = new User({ userName, email, role, password: hashedPassword, otp, otpExpiry, isVerified: false });
     console.log("User token generated--------------:", user);
     await user.save();
     await sendOtpEmail(email, otp);
@@ -79,7 +79,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
-    res.status(200).json({name: existingUser.userName, artist_id:existingUser.artistId, message: "User registered successfully" });
+    res.status(200).json({name: existingUser.userName,role: existingUser.role, artist_id:existingUser.artistId, message: "User registered successfully" });
   }
   catch (error: any) {
     console.error(error); // For debugging
@@ -120,7 +120,7 @@ export const getDetails = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ data: { email: user.email ,userName:user.userName} });
+    res.status(200).json({ data: { email: user.email ,userName:user.userName, role:user.role} });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
