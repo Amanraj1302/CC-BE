@@ -126,7 +126,7 @@ export const uploadProfile = async (req: Request, res: Response) => {
     // Get uploaded files
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    const updatedPhotos ={} as any;
+    const updatedPhotos = {} as any;
 
     const fields = ["headshot", "smilingHeadshot", "fullBody", "threeQuarter", "profile", "artistDp"];
 
@@ -208,7 +208,7 @@ export const getAllArtistProfiles = async (req: Request, res: Response) => {
     const formattedArtists = artists.map(artist => {
       const artistObj = artist.toObject();
       const profileImg = artist?.photos?.artistDp;
-      
+
       return {
         name: artistObj.fullName,
         _id: artistObj._id,
@@ -256,7 +256,7 @@ export const editsubmitArtistProfile = async (req: Request, res: Response) => {
       homeCity, homeState, currentCity, currentState,
       instagram, youtube, twitter, linkedin
     } = req.body;
-    
+
 
     const existingArtist = await ArtistInfo.findOne({ email });
     if (!existingArtist) {

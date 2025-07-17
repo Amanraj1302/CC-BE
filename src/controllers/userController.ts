@@ -58,7 +58,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
 
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    console.log("Login request received:", req.body);
+   
     const { email, password } = req.body;
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
@@ -82,7 +82,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     res.status(200).json({name: existingUser.userName,role: existingUser.role, artist_id:existingUser.artistId, message: "User registered successfully" });
   }
   catch (error: any) {
-    console.error(error); // For debugging
+    
     return res.status(500).json({ error: "Server error during login" });
   }
 };

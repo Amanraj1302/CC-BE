@@ -1,3 +1,4 @@
+import { optional } from "joi";
 import mongoose from "mongoose";
 
 export const projectSchema = new mongoose.Schema(
@@ -80,7 +81,7 @@ export const projectSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
 
   },
