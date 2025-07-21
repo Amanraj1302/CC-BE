@@ -26,7 +26,7 @@ app.use("/api/project",ProjectFormRoutes)
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {
     console.log("MongoDB connected");
-    app.listen(8000, () => {
+    app.listen(5000, () => {
       console.log("Server running on port" + "http://localhost:5000");
     });
   })
